@@ -1,51 +1,68 @@
-import React from 'react';
+import React, { FC } from 'react';
+import { useRef } from 'react';
 import { create } from 'zustand';
 
 export function Calc() {
+  const ref = useRef();
+  const refMonth = useRef();
+
   interface Store {
     cashAmount: number;
-    mounthAmount: number;
-    setCashAmount: () => any;
-    setMountAmount: () => void;
+    monthAmount: number;
+    totalPercent: number;
+    setCashAmount: () => void;
+    setMonthAmount: () => void;
+    setTotalPercent: () => void;
   }
 
   const useCreditStore = create<Store>((set) => ({
     cashAmount: 300000,
-    mounthAmount: 13,
-    setCashAmount: () => set((state) => ({ cashAmount: 100 })),
-    setMountAmount: () =>
-      set((state) => ({ mounthAmount: state.mounthAmount + 1 })),
+    monthAmount: 13,
+    totalPercent: 10.99,
+    setCashAmount: (ref: number) => set((state) => ({ cashAmount: ref })),
+    setMonthAmount: (refMonth: number) =>
+      set((state) => ({ monthAmount: refMonth })),
+    setTotalPercent: () => set((state) => ({ totalPercent: 100 })),
   }));
 
   function CashHandler() {
     const cashCounter = useCreditStore((state) => state.cashAmount);
-    return <span>{cashCounter}</span>;
+    return <span>{`${cashCounter} руб.`}</span>;
   }
 
-  const InputValueHandler = () => {
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    return (
-      <input
-        type="range"
-        ref={inputRef}
-        className="my-2 w-100 h-2 w-full"
-        max={'7000000'}
-      />
-    );
+  const cashAmount = useCreditStore((state) => state.setCashAmount);
+
+  const cashAmountToggle = () => {
+    cashAmount(ref.current.value);
   };
 
-  const mounthHandler = useCreditStore((state) => state.mounthAmount);
-  function CashInput() {
-    const changeVal = useCreditStore((state) => state.setCashAmount);
-    return (
-      <InputValueHandler />
-      //   <input
-      //     type="range"
-      //     className="my-2 w-100 h-2 w-full"
-      //     max={'7000000'}
-      //     onClick={changeVal}
-      //   />
+  function MonthHandler() {
+    const monthCounter = useCreditStore((state) => state.monthAmount);
+    return <span>{monthCounter}</span>;
+  }
+
+  const monthAmount = useCreditStore((state) => state.setMonthAmount);
+
+  const monthAmountToggle = () => {
+    monthAmount(refMonth.current.value);
+  };
+
+  const totalPercent = useCreditStore((state) => state.totalPercent);
+
+  //   const setTotalPercent = useCreditStore((state) => state.setTotalPercent);
+
+  function SetTotalCashMonth() {
+    const totalSum = Math.round(
+      (useCreditStore((state) => state.cashAmount) /
+        useCreditStore((state) => state.monthAmount)) *
+        totalPercent
     );
+    return <span>{`${totalSum} руб.`}</span>;
+  }
+
+  function SetTotalPercent() {
+    const totalSum = useCreditStore((state) => state.totalPercent);
+    return <span>{`${totalSum} %`}</span>;
   }
 
   return (
@@ -57,11 +74,16 @@ export function Calc() {
             <p className="flex justify-start">Сумма кредита</p>
             <div className=" flex justify-between">
               <CashHandler />
-
-              <span>7,000,000</span>
             </div>
 
-            <CashInput />
+            <input
+              type="range"
+              ref={ref}
+              className="my-2 w-100 h-2 w-full"
+              max={'7000000'}
+              min={'300000'}
+              onChange={cashAmountToggle}
+            />
 
             <div className=" flex justify-between font-thin ">
               <span>от 300,000 P</span>
@@ -72,10 +94,16 @@ export function Calc() {
           <div id="setMounthsInput" className="my-5">
             <p className="flex justify-start">Срок кредита</p>
             <div className=" flex justify-between">
-              <span>{`${mounthHandler} месяцев`}</span>
-              <span>60 месяцев</span>
+              <MonthHandler />
             </div>
-            <input type="range" className="my-2 w-100 h-2 w-full" max={'60'} />
+            <input
+              ref={refMonth}
+              type="range"
+              className="my-2 w-100 h-2 w-full"
+              max={'60'}
+              min={'13'}
+              onChange={monthAmountToggle}
+            />
             <div className=" flex justify-between font-thin">
               <span>13 месяцев</span>
               <span>60 месяцев</span>
@@ -83,25 +111,30 @@ export function Calc() {
           </div>
         </div>
 
-        <div>
+        <div className="my-5 py-3">
           <p className="flex justify-start">Дополнительные опции</p>
-          <div className="flex justify-between my-3 ">
-            <button>toggle</button>
+          <div className="flex justify-between my-3 py-2">
+            <input type="checkbox" />
             <span>Зарплатная карта КирБанка</span>
             <span>-1,5%</span>
           </div>
           <div className="flex justify-between my-3 ">
-            <button>toggle</button>
+            <input type="checkbox" />
             <span>Подписка на меня в инст </span>
             <span>-2%</span>
           </div>
         </div>
-        <div>
-          <p>Ставка</p>
-          <span>%</span>
-          <p>Ежемесячный платёж</p>
+        <div className="flex flex-col  my-8 py-2">
+          <div className="flex justify-between my-3">
+            <p>Ежемесячный платёж</p>
+            <SetTotalCashMonth />
+          </div>
+          <div className="flex justify-between my-2">
+            <p>Процентная ставка</p>
+            <SetTotalPercent />
+          </div>
         </div>
-        <button className="bg-blue-500 px-8 py-4 border-2">
+        <button className="bg-blue-500 px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 ">
           Оформить кредит
         </button>
       </div>
