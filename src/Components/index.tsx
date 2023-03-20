@@ -1,10 +1,12 @@
-import React, { FC } from 'react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { create } from 'zustand';
 
 export function Calc() {
   const ref = useRef();
   const refMonth = useRef();
+
+  const [cardHolderChecked, setCardHolderChecked] = useState(false);
+  const [subscribtionChecked, setSubscribtionChecked] = useState(false);
 
   interface Store {
     cashAmount: number;
@@ -22,7 +24,8 @@ export function Calc() {
     setCashAmount: (ref: number) => set((state) => ({ cashAmount: ref })),
     setMonthAmount: (refMonth: number) =>
       set((state) => ({ monthAmount: refMonth })),
-    setTotalPercent: () => set((state) => ({ totalPercent: 100 })),
+    setTotalPercent: (percent: number) =>
+      set((state) => ({ totalPercent: state.totalPercent - percent })),
   }));
 
   function CashHandler() {
@@ -47,15 +50,17 @@ export function Calc() {
     monthAmount(refMonth.current.value);
   };
 
-  const totalPercent = useCreditStore((state) => state.totalPercent);
+  const changeTotalPercent = useCreditStore((state) => state.setTotalPercent);
 
-  //   const setTotalPercent = useCreditStore((state) => state.setTotalPercent);
+  const changePercentage = () => {
+    changeTotalPercent(0);
+  };
 
   function SetTotalCashMonth() {
     const totalSum = Math.round(
       (useCreditStore((state) => state.cashAmount) /
         useCreditStore((state) => state.monthAmount)) *
-        totalPercent
+        useCreditStore((state) => state.totalPercent)
     );
     return <span>{`${totalSum} руб.`}</span>;
   }
@@ -112,16 +117,26 @@ export function Calc() {
         </div>
 
         <div className="my-5 py-3">
-          <p className="flex justify-start">Дополнительные опции</p>
-          <div className="flex justify-between my-3 py-2">
-            <input type="checkbox" />
-            <span>Зарплатная карта КирБанка</span>
-            <span>-1,5%</span>
-          </div>
-          <div className="flex justify-between my-3 ">
-            <input type="checkbox" />
-            <span>Подписка на меня в инст </span>
-            <span>-2%</span>
+          <div>
+            <p className="flex justify-start">Дополнительные опции</p>
+            <div className="flex justify-between my-3 py-2">
+              <input
+                type="checkbox"
+                checked={cardHolderChecked}
+                onChange={() => setCardHolderChecked(!cardHolderChecked)}
+              />
+              <span>Зарплатная карта КирБанка</span>
+              <span>-1,5%</span>
+            </div>
+            <div className="flex justify-between my-3 ">
+              <input
+                type="checkbox"
+                checked={subscribtionChecked}
+                onChange={() => setSubscribtionChecked(!subscribtionChecked)}
+              />
+              <span>Подписка на меня в инст </span>
+              <span>-2%</span>
+            </div>
           </div>
         </div>
         <div className="flex flex-col  my-8 py-2">
