@@ -25,7 +25,9 @@ export function Calc() {
     setMonthAmount: (refMonth: number) =>
       set((state) => ({ monthAmount: refMonth })),
     setTotalPercent: (percent: number) =>
-      set((state) => ({ totalPercent: state.totalPercent - percent })),
+      set((state) => ({
+        totalPercent: state.totalPercent - percent,
+      })),
   }));
 
   function CashHandler() {
@@ -50,16 +52,17 @@ export function Calc() {
     monthAmount(refMonth.current.value);
   };
 
-  const changeTotalPercent = useCreditStore((state) => state.setTotalPercent);
+  const changeTotal = useCreditStore((state) => state.setTotalPercent);
 
-  const changePercentage = () => {
-    changeTotalPercent(0);
+  const changeTotalPercent = () => {
+    cardHolderChecked ? changeTotal(1.5) : changeTotal(1);
+    setCardHolderChecked(!cardHolderChecked);
   };
 
   function SetTotalCashMonth() {
     const totalSum = Math.round(
-      (useCreditStore((state) => state.cashAmount) /
-        useCreditStore((state) => state.monthAmount)) *
+      useCreditStore((state) => state.cashAmount) /
+        useCreditStore((state) => state.monthAmount) +
         useCreditStore((state) => state.totalPercent)
     );
     return <span>{`${totalSum} руб.`}</span>;
@@ -71,7 +74,7 @@ export function Calc() {
   }
 
   return (
-    <div className=" m-auto border-2 border-blue-300 rounded-2xl w-max">
+    <div className=" m-auto border-2 bg-white rounded-2xl w-max shadow-2xl">
       <div className="py-10 px-10">
         <h2>Калькулятор рассчёта по кредиту наличными</h2>
         <div className="flex flex-col  my-2 ">
@@ -120,21 +123,22 @@ export function Calc() {
           <div>
             <p className="flex justify-start">Дополнительные опции</p>
             <div className="flex justify-between my-3 py-2">
+              <span>Зарплатная карта КирБанка</span>
               <input
                 type="checkbox"
                 checked={cardHolderChecked}
-                onChange={() => setCardHolderChecked(!cardHolderChecked)}
+                onChange={(e) => changeTotalPercent()}
               />
-              <span>Зарплатная карта КирБанка</span>
               <span>-1,5%</span>
             </div>
             <div className="flex justify-between my-3 ">
+              <span>Подписка на меня в инста </span>
+
               <input
                 type="checkbox"
                 checked={subscribtionChecked}
                 onChange={() => setSubscribtionChecked(!subscribtionChecked)}
               />
-              <span>Подписка на меня в инст </span>
               <span>-2%</span>
             </div>
           </div>
@@ -149,7 +153,12 @@ export function Calc() {
             <SetTotalPercent />
           </div>
         </div>
-        <button className="bg-blue-500 px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 ">
+        <button
+          onClick={(e) => {
+            changeTotalPercent();
+          }}
+          className="bg-blue-500  px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 "
+        >
           Оформить кредит
         </button>
       </div>
