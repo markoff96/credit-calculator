@@ -5,8 +5,8 @@ export function Calc() {
   const ref = useRef();
   const refMonth = useRef();
 
-  const [cardHolderChecked, setCardHolderChecked] = useState(false);
-  const [subscribtionChecked, setSubscribtionChecked] = useState(false);
+  const [cardHolderPercent, setCardHolderPercent] = useState(1.5);
+  const [subscriptionPercent, setSubscribtionPercent] = useState(2);
 
   interface Store {
     cashAmount: number;
@@ -29,6 +29,45 @@ export function Calc() {
         totalPercent: state.totalPercent - percent,
       })),
   }));
+
+  interface Percent {
+    cardHolderChecked: boolean;
+    subscribtionChecked: boolean;
+    setCardHolderChecked: () => void;
+    setSubscribtionChecked: () => void;
+  }
+
+  const usePercentStore = create<Percent>((set) => ({
+    cardHolderChecked: false,
+    subscribtionChecked: false,
+    setCardHolderChecked: () =>
+      set((state) => ({ cardHolderChecked: !state.cardHolderChecked })),
+    setSubscribtionChecked: () =>
+      set((state) => ({ subscribtionChecked: !state.subscribtionChecked })),
+  }));
+
+  function SetCardHolder() {
+    const cardHolder = usePercentStore((state) => state.cardHolderChecked);
+    return (
+      <input
+        type="checkbox"
+        checked={cardHolder}
+        onChange={usePercentStore((state) => state.setCardHolderChecked)}
+        onClick={changeTotalPercent()}
+      />
+    );
+  }
+
+  function SetSubHolder() {
+    const subHolder = usePercentStore((state) => state.subscribtionChecked);
+    return (
+      <input
+        type="checkbox"
+        checked={subHolder}
+        onChange={usePercentStore((state) => state.setSubscribtionChecked)}
+      />
+    );
+  }
 
   function CashHandler() {
     const cashCounter = useCreditStore((state) => state.cashAmount);
@@ -54,10 +93,13 @@ export function Calc() {
 
   const changeTotal = useCreditStore((state) => state.setTotalPercent);
 
-  const changeTotalPercent = () => {
-    cardHolderChecked ? changeTotal(1.5) : changeTotal(1);
-    setCardHolderChecked(!cardHolderChecked);
-  };
+  function changeTotalPercent() {
+    changeTotal(
+      usePercentStore((state) => state.cardHolderChecked)
+        ? cardHolderPercent
+        : 0
+    );
+  }
 
   function SetTotalCashMonth() {
     const totalSum = Math.round(
@@ -124,22 +166,14 @@ export function Calc() {
             <p className="flex justify-start">Дополнительные опции</p>
             <div className="flex justify-between my-3 py-2">
               <span>Зарплатная карта КирБанка</span>
-              <input
-                type="checkbox"
-                checked={cardHolderChecked}
-                onChange={(e) => changeTotalPercent()}
-              />
-              <span>-1,5%</span>
+              <SetCardHolder />
+              <span>{`- ${cardHolderPercent} %`}</span>
             </div>
             <div className="flex justify-between my-3 ">
               <span>Подписка на меня в инста </span>
 
-              <input
-                type="checkbox"
-                checked={subscribtionChecked}
-                onChange={() => setSubscribtionChecked(!subscribtionChecked)}
-              />
-              <span>-2%</span>
+              <SetSubHolder />
+              <span>{`- ${subscriptionPercent} %`}</span>
             </div>
           </div>
         </div>
@@ -154,7 +188,7 @@ export function Calc() {
           </div>
         </div>
         <button
-          onClick={(e) => {
+          onClick={(event) => {
             changeTotalPercent();
           }}
           className="bg-blue-500  px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 "
