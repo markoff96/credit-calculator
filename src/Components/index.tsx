@@ -5,19 +5,26 @@ export function Calc() {
   const ref = useRef();
   const refMonth = useRef();
 
-  const [cardHolderPercent, setCardHolderPercent] = useState(1.5);
-  const [subscriptionPercent, setSubscribtionPercent] = useState(2);
-
-  interface Store {
+  interface Percent {
+    cardHolderChecked: boolean;
+    subscribtionChecked: boolean;
     cashAmount: number;
     monthAmount: number;
     totalPercent: number;
+    setCardHolderChecked: () => void;
+    setSubscribtionChecked: () => void;
     setCashAmount: () => void;
     setMonthAmount: () => void;
     setTotalPercent: () => void;
   }
 
-  const useCreditStore = create<Store>((set) => ({
+  const usePercentStore = create<Percent>((set) => ({
+    cardHolderChecked: false,
+    subscribtionChecked: false,
+    setCardHolderChecked: () =>
+      set((state) => ({ cardHolderChecked: !state.cardHolderChecked })),
+    setSubscribtionChecked: () =>
+      set((state) => ({ subscribtionChecked: !state.subscribtionChecked })),
     cashAmount: 300000,
     monthAmount: 13,
     totalPercent: 10.99,
@@ -30,21 +37,11 @@ export function Calc() {
       })),
   }));
 
-  interface Percent {
-    cardHolderChecked: boolean;
-    subscribtionChecked: boolean;
-    setCardHolderChecked: () => void;
-    setSubscribtionChecked: () => void;
-  }
+  const changeTotal = usePercentStore((state) => state.setTotalPercent);
 
-  const usePercentStore = create<Percent>((set) => ({
-    cardHolderChecked: false,
-    subscribtionChecked: false,
-    setCardHolderChecked: () =>
-      set((state) => ({ cardHolderChecked: !state.cardHolderChecked })),
-    setSubscribtionChecked: () =>
-      set((state) => ({ subscribtionChecked: !state.subscribtionChecked })),
-  }));
+  function changeTotalPercent(percent: number) {
+    changeTotal(percent);
+  }
 
   function SetCardHolder() {
     const cardHolder = usePercentStore((state) => state.cardHolderChecked);
@@ -52,8 +49,8 @@ export function Calc() {
       <input
         type="checkbox"
         checked={cardHolder}
-        onChange={usePercentStore((state) => state.setCardHolderChecked)}
-        onClick={changeTotalPercent()}
+        onChange={changeTotalPercent(2)}
+        onClick={usePercentStore((state) => state.setCardHolderChecked)}
       />
     );
   }
@@ -64,54 +61,45 @@ export function Calc() {
       <input
         type="checkbox"
         checked={subHolder}
-        onChange={usePercentStore((state) => state.setSubscribtionChecked)}
+        onChange={changeTotalPercent(1.5)}
+        onClick={usePercentStore((state) => state.setSubscribtionChecked)}
       />
     );
   }
 
   function CashHandler() {
-    const cashCounter = useCreditStore((state) => state.cashAmount);
+    const cashCounter = usePercentStore((state) => state.cashAmount);
     return <span>{`${cashCounter} руб.`}</span>;
   }
 
-  const cashAmount = useCreditStore((state) => state.setCashAmount);
+  const cashAmount = usePercentStore((state) => state.setCashAmount);
 
   const cashAmountToggle = () => {
     cashAmount(ref.current.value);
   };
 
   function MonthHandler() {
-    const monthCounter = useCreditStore((state) => state.monthAmount);
+    const monthCounter = usePercentStore((state) => state.monthAmount);
     return <span>{monthCounter}</span>;
   }
 
-  const monthAmount = useCreditStore((state) => state.setMonthAmount);
+  const monthAmount = usePercentStore((state) => state.setMonthAmount);
 
   const monthAmountToggle = () => {
     monthAmount(refMonth.current.value);
   };
 
-  const changeTotal = useCreditStore((state) => state.setTotalPercent);
-
-  function changeTotalPercent() {
-    changeTotal(
-      usePercentStore((state) => state.cardHolderChecked)
-        ? cardHolderPercent
-        : 0
-    );
-  }
-
   function SetTotalCashMonth() {
     const totalSum = Math.round(
-      useCreditStore((state) => state.cashAmount) /
-        useCreditStore((state) => state.monthAmount) +
-        useCreditStore((state) => state.totalPercent)
+      usePercentStore((state) => state.cashAmount) /
+        usePercentStore((state) => state.monthAmount) +
+        usePercentStore((state) => state.totalPercent)
     );
     return <span>{`${totalSum} руб.`}</span>;
   }
 
   function SetTotalPercent() {
-    const totalSum = useCreditStore((state) => state.totalPercent);
+    const totalSum = usePercentStore((state) => state.totalPercent);
     return <span>{`${totalSum} %`}</span>;
   }
 
@@ -167,13 +155,13 @@ export function Calc() {
             <div className="flex justify-between my-3 py-2">
               <span>Зарплатная карта КирБанка</span>
               <SetCardHolder />
-              <span>{`- ${cardHolderPercent} %`}</span>
+              <span>-1.5%</span>
             </div>
             <div className="flex justify-between my-3 ">
               <span>Подписка на меня в инста </span>
 
               <SetSubHolder />
-              <span>{`- ${subscriptionPercent} %`}</span>
+              <span>-2%</span>
             </div>
           </div>
         </div>
@@ -187,12 +175,7 @@ export function Calc() {
             <SetTotalPercent />
           </div>
         </div>
-        <button
-          onClick={(event) => {
-            changeTotalPercent();
-          }}
-          className="bg-blue-500  px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 "
-        >
+        <button className="bg-blue-500  px-8 py-4 border-2 rounded-2xl shadow-2xll hover:bg-blue-300 ">
           Оформить кредит
         </button>
       </div>
